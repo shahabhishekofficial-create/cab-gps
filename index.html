@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
   <title>CAB Location</title>
 
   <style>
+
     body {
       font-family: Arial, sans-serif;
       text-align: center;
@@ -43,7 +47,9 @@
       margin-top: 25px;
       line-height: 1.6;
     }
+
   </style>
+
 </head>
 
 <body>
@@ -54,15 +60,18 @@
     Tap the button below to record your current location.
   </p>
 
-  <button id="captureButton" onclick="captureLocation()">
+  <button id="captureButton"
+          onclick="captureLocation()">
     📍 Capture Current Location
   </button>
 
-  <button id="backButton" onclick="goBackToForm()">
+  <button id="backButton"
+          onclick="goBackToForm()">
     ↩️ Go Back to Form
   </button>
 
   <div id="status"></div>
+
 
 <script>
 
@@ -72,14 +81,21 @@ const RECEIVER_URL =
 
 function captureLocation() {
 
-  const status = document.getElementById('status');
-  const captureButton = document.getElementById('captureButton');
-  const backButton = document.getElementById('backButton');
+  const status =
+    document.getElementById('status');
+
+  const captureButton =
+    document.getElementById('captureButton');
+
+  const backButton =
+    document.getElementById('backButton');
+
 
   status.innerHTML =
     '📍 Getting your current location...';
 
   captureButton.disabled = true;
+
 
   if (!navigator.geolocation) {
 
@@ -90,6 +106,7 @@ function captureLocation() {
 
     return;
   }
+
 
   navigator.geolocation.getCurrentPosition(
 
@@ -104,75 +121,71 @@ function captureLocation() {
       const accuracy =
         position.coords.accuracy;
 
+
       const activity =
-        new URLSearchParams(window.location.search)
-        .get('activity') || 'Unknown';
+        new URLSearchParams(
+          window.location.search
+        ).get('activity') || 'Unknown';
 
-      const data = {
 
-        activity: activity,
-
-        latitude: latitude,
-
-        longitude: longitude,
-
-        accuracy: accuracy,
-
-        gpsTimestamp:
-          new Date().toISOString()
-      };
+      const gpsTimestamp =
+        new Date().toISOString();
 
 
       status.innerHTML =
         '⏳ Saving location...';
 
 
-      fetch(RECEIVER_URL, {
+      const url =
+        RECEIVER_URL +
+        '?activity=' +
+        encodeURIComponent(activity) +
+        '&latitude=' +
+        encodeURIComponent(latitude) +
+        '&longitude=' +
+        encodeURIComponent(longitude) +
+        '&accuracy=' +
+        encodeURIComponent(accuracy) +
+        '&gpsTimestamp=' +
+        encodeURIComponent(gpsTimestamp);
 
-        method: 'POST',
 
-        mode: 'no-cors',
+      const image =
+        new Image();
 
-        headers: {
-          'Content-Type': 'text/plain'
-        },
 
-        body: JSON.stringify(data)
+      image.onload =
+        function() {
 
-      })
-      .then(function() {
+          locationSaved();
 
-        status.innerHTML =
-          '✅ Location recorded successfully.' +
-          '<br><br>' +
-          'Accuracy: ' +
-          Math.round(accuracy) +
-          ' metres' +
-          '<br><br>' +
-          'You can now return to the CAB Form.';
+        };
 
-        captureButton.style.display = 'none';
 
-        backButton.style.display = 'block';
+      image.onerror =
+        function() {
 
-      })
-      .catch(function(error) {
+          /*
+           * The request may still have reached
+           * Apps Script even if the browser
+           * reports an image/network error.
+           */
 
-        status.innerHTML =
-          '❌ Could not save location.' +
-          '<br><br>' +
-          error;
+          locationSaved();
 
-        captureButton.disabled = false;
+        };
 
-      });
+
+      image.src = url;
 
     },
+
 
     function(error) {
 
       let message =
         'Unable to get your location.';
+
 
       if (error.code === 1) {
 
@@ -191,6 +204,7 @@ function captureLocation() {
 
       }
 
+
       status.innerHTML =
         '❌ ' + message;
 
@@ -198,12 +212,40 @@ function captureLocation() {
 
     },
 
+
     {
       enableHighAccuracy: true,
       timeout: 20000,
       maximumAge: 0
     }
+
   );
+}
+
+
+function locationSaved() {
+
+  const status =
+    document.getElementById('status');
+
+  const captureButton =
+    document.getElementById('captureButton');
+
+  const backButton =
+    document.getElementById('backButton');
+
+
+  status.innerHTML =
+    '✅ Location recorded successfully.' +
+    '<br><br>' +
+    'You can now return to the CAB Form.';
+
+
+  captureButton.style.display =
+    'none';
+
+  backButton.style.display =
+    'block';
 }
 
 
