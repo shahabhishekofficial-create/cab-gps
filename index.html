@@ -1,14 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CAB Location</title>
 
   <style>
-
     body {
       font-family: Arial, sans-serif;
       text-align: center;
@@ -38,6 +34,10 @@
       color: white;
     }
 
+    button:disabled {
+      opacity: 0.5;
+    }
+
     #backButton {
       display: none;
       background: #555;
@@ -47,9 +47,7 @@
       margin-top: 25px;
       line-height: 1.6;
     }
-
   </style>
-
 </head>
 
 <body>
@@ -60,42 +58,30 @@
     Tap the button below to record your current location.
   </p>
 
-  <button id="captureButton"
-          onclick="captureLocation()">
+  <button id="captureButton" onclick="captureLocation()">
     📍 Capture Current Location
   </button>
 
-  <button id="backButton"
-          onclick="goBackToForm()">
+  <button id="backButton" onclick="goBackToForm()">
     ↩️ Go Back to Form
   </button>
 
   <div id="status"></div>
 
-
 <script>
 
 const RECEIVER_URL =
-'https://script.google.com/macros/s/AKfycbyhw2SQWK9a3hTtEUhbVJZhKp5CNCpPwHDqq8muUMExTJe3pKBpPxXe-0ANIg1JnY3ang/exec';
+'https://script.google.com/macros/s/AKfycbw6nya5-88cmArbUdmhGXgJof0E84ws6ijGgpCI4T0qK3K3tciHxX_q4QtqNX3CP7JQiA/exec';
 
 
 function captureLocation() {
 
-  const status =
-    document.getElementById('status');
+  const status = document.getElementById('status');
+  const captureButton = document.getElementById('captureButton');
 
-  const captureButton =
-    document.getElementById('captureButton');
-
-  const backButton =
-    document.getElementById('backButton');
-
-
-  status.innerHTML =
-    '📍 Getting your current location...';
+  status.innerHTML = '📍 Getting your current location...';
 
   captureButton.disabled = true;
-
 
   if (!navigator.geolocation) {
 
@@ -103,7 +89,6 @@ function captureLocation() {
       '❌ Location is not supported on this device.';
 
     captureButton.disabled = false;
-
     return;
   }
 
@@ -112,72 +97,54 @@ function captureLocation() {
 
     function(position) {
 
-      const latitude =
-        position.coords.latitude;
-
-      const longitude =
-        position.coords.longitude;
-
-      const accuracy =
-        position.coords.accuracy;
-
+      const latitude = position.coords.latitude;
+      const longitude = position.coords.longitude;
+      const accuracy = position.coords.accuracy;
 
       const activity =
-        new URLSearchParams(
-          window.location.search
-        ).get('activity') || 'Unknown';
+        new URLSearchParams(window.location.search)
+        .get('activity') || 'Unknown';
+
+      const gpsTimestamp = new Date().toISOString();
 
 
-      const gpsTimestamp =
-        new Date().toISOString();
+      status.innerHTML = '⏳ Saving location...';
 
 
-      status.innerHTML =
-        '⏳ Saving location...';
+      const params = new URLSearchParams();
+
+      params.append('activity', activity);
+      params.append('latitude', latitude);
+      params.append('longitude', longitude);
+      params.append('accuracy', accuracy);
+      params.append('gpsTimestamp', gpsTimestamp);
 
 
-      const url =
+      /*
+       * Use an invisible image request.
+       * This avoids cross-origin/CORS problems.
+       */
+
+      const request = new Image();
+
+      request.onload = function() {
+        locationSaved();
+      };
+
+      request.onerror = function() {
+        /*
+         * The Apps Script receiver may still have
+         * successfully recorded the request.
+         */
+        locationSaved();
+      };
+
+      request.src =
         RECEIVER_URL +
-        '?activity=' +
-        encodeURIComponent(activity) +
-        '&latitude=' +
-        encodeURIComponent(latitude) +
-        '&longitude=' +
-        encodeURIComponent(longitude) +
-        '&accuracy=' +
-        encodeURIComponent(accuracy) +
-        '&gpsTimestamp=' +
-        encodeURIComponent(gpsTimestamp);
-
-
-      const image =
-        new Image();
-
-
-      image.onload =
-        function() {
-
-          locationSaved();
-
-        };
-
-
-      image.onerror =
-        function() {
-
-          /*
-           * The request may still have reached
-           * Apps Script even if the browser
-           * reports an image/network error.
-           */
-
-          locationSaved();
-
-        };
-
-
-      image.src = url;
-
+        '?' +
+        params.toString() +
+        '&cache=' +
+        Date.now();
     },
 
 
@@ -185,7 +152,6 @@ function captureLocation() {
 
       let message =
         'Unable to get your location.';
-
 
       if (error.code === 1) {
 
@@ -204,12 +170,9 @@ function captureLocation() {
 
       }
 
-
-      status.innerHTML =
-        '❌ ' + message;
+      status.innerHTML = '❌ ' + message;
 
       captureButton.disabled = false;
-
     },
 
 
@@ -225,27 +188,17 @@ function captureLocation() {
 
 function locationSaved() {
 
-  const status =
-    document.getElementById('status');
-
-  const captureButton =
-    document.getElementById('captureButton');
-
-  const backButton =
-    document.getElementById('backButton');
-
+  const status = document.getElementById('status');
+  const captureButton = document.getElementById('captureButton');
+  const backButton = document.getElementById('backButton');
 
   status.innerHTML =
     '✅ Location recorded successfully.' +
     '<br><br>' +
-    'You can now return to the CAB Form.';
+    'Return to the CAB Form tab.';
 
-
-  captureButton.style.display =
-    'none';
-
-  backButton.style.display =
-    'block';
+  captureButton.style.display = 'none';
+  backButton.style.display = 'block';
 }
 
 
