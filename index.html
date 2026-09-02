@@ -66,6 +66,10 @@
 
 <script>
 
+const RECEIVER_URL =
+'https://script.google.com/macros/s/AKfycbyhw2SQWK9a3hTtEUhbVJZhKp5CNCpPwHDqq8muUMExTJe3pKBpPxXe-0ANIg1JnY3ang/exec';
+
+
 function captureLocation() {
 
   const status = document.getElementById('status');
@@ -100,18 +104,68 @@ function captureLocation() {
       const accuracy =
         position.coords.accuracy;
 
+      const activity =
+        new URLSearchParams(window.location.search)
+        .get('activity') || 'Unknown';
+
+      const data = {
+
+        activity: activity,
+
+        latitude: latitude,
+
+        longitude: longitude,
+
+        accuracy: accuracy,
+
+        gpsTimestamp:
+          new Date().toISOString()
+      };
+
+
       status.innerHTML =
-        '✅ Location captured successfully.' +
-        '<br><br>' +
-        'Accuracy: ' +
-        Math.round(accuracy) +
-        ' metres' +
-        '<br><br>' +
-        'You can now return to the CAB Form.';
+        '⏳ Saving location...';
 
-      captureButton.style.display = 'none';
 
-      backButton.style.display = 'block';
+      fetch(RECEIVER_URL, {
+
+        method: 'POST',
+
+        mode: 'no-cors',
+
+        headers: {
+          'Content-Type': 'text/plain'
+        },
+
+        body: JSON.stringify(data)
+
+      })
+      .then(function() {
+
+        status.innerHTML =
+          '✅ Location recorded successfully.' +
+          '<br><br>' +
+          'Accuracy: ' +
+          Math.round(accuracy) +
+          ' metres' +
+          '<br><br>' +
+          'You can now return to the CAB Form.';
+
+        captureButton.style.display = 'none';
+
+        backButton.style.display = 'block';
+
+      })
+      .catch(function(error) {
+
+        status.innerHTML =
+          '❌ Could not save location.' +
+          '<br><br>' +
+          error;
+
+        captureButton.disabled = false;
+
+      });
 
     },
 
