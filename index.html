@@ -1,214 +1,37 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CAB Location</title>
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 35px 20px;
-      max-width: 500px;
-      margin: auto;
-    }
-
-    h2 {
-      margin-bottom: 10px;
-    }
-
-    p {
-      color: #555;
-      line-height: 1.5;
-    }
-
-    button {
-      width: 100%;
-      padding: 16px;
-      margin-top: 25px;
-      font-size: 18px;
-      font-weight: bold;
-      border: none;
-      border-radius: 8px;
-      background: #222;
-      color: white;
-    }
-
-    button:disabled {
-      opacity: 0.5;
-    }
-
-    #backButton {
-      display: none;
-      background: #555;
-    }
-
-    #status {
-      margin-top: 25px;
-      line-height: 1.6;
-    }
-  </style>
-</head>
-
-<body>
-
-  <h2>📍 CAB Location</h2>
-
-  <p>
-    Tap the button below to record your current location.
-  </p>
-
-  <button id="captureButton" onclick="captureLocation()">
-    📍 Capture Current Location
-  </button>
-
-  <button id="backButton" onclick="goBackToForm()">
-    ↩️ Go Back to Form
-  </button>
-
-  <div id="status"></div>
-
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827"><title>CAB Operations</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:#f3f4f6;color:#111827}button,input,select,textarea{font:inherit}button{border:0;border-radius:14px;padding:14px 16px;font-weight:700;cursor:pointer}.app{max-width:520px;margin:auto;min-height:100vh;background:#fff}.top{padding:20px 18px 12px;background:#111827;color:#fff;position:sticky;top:0;z-index:5}.top h1{margin:0;font-size:22px}.top small{opacity:.75}.content{padding:16px 16px 90px}.card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 2px 8px #00000008}.hero{background:#111827;color:#fff}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.metric{background:#f9fafb;border-radius:14px;padding:13px}.metric b{display:block;font-size:21px;margin-top:4px}.muted{color:#6b7280;font-size:13px}.btn{width:100%;margin-top:10px}.primary{background:#111827;color:#fff}.success{background:#166534;color:#fff}.warn{background:#92400e;color:#fff}.danger{background:#991b1b;color:#fff}.secondary{background:#e5e7eb;color:#111827}.field{margin:10px 0}.field label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}.field input,.field select,.field textarea{width:100%;padding:12px;border:1px solid #d1d5db;border-radius:12px;background:#fff}.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(520px,100%);display:grid;grid-template-columns:repeat(4,1fr);background:#fff;border-top:1px solid #e5e7eb;padding:8px;z-index:6}.bottom button{padding:9px 4px;background:#fff;font-size:12px}.hidden{display:none!important}.pill{display:inline-block;padding:5px 9px;border-radius:999px;background:#dcfce7;color:#166534;font-size:12px;font-weight:700}.photo{width:100%;border-radius:12px;margin-top:8px}.toast{position:fixed;top:75px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:12px 16px;border-radius:12px;z-index:20;max-width:90%;box-shadow:0 5px 20px #0003}
+</style></head>
+<body><div class="app">
+<div id="login" class="content" style="padding-top:70px"><div class="card hero"><h1>🚕 CAB Operations</h1><p>Driver mobile operations</p><div class="field"><label>Driver email</label><input id="loginEmail" type="email" placeholder="driver@example.com"></div><button class="btn primary" onclick="login()">Login</button></div></div>
+<div id="main" class="hidden"><header class="top"><h1>🚕 CAB Operations</h1><small id="userLine"></small></header><main class="content">
+<section id="home"></section><section id="trips" class="hidden"></section><section id="finance" class="hidden"></section><section id="vehicle" class="hidden"></section></main><nav class="bottom"><button onclick="show('home')">🏠<br>Home</button><button onclick="show('trips')">🚕<br>Trips</button><button onclick="show('finance')">💰<br>Money</button><button onclick="show('vehicle')">🚗<br>Vehicle</button></nav></div></div>
+<div id="modal" class="hidden"></div><div id="toast" class="hidden toast"></div>
 <script>
-
-const RECEIVER_URL =
-'https://script.google.com/macros/s/AKfycbw6nya5-88cmArbUdmhGXgJof0E84ws6ijGgpCI4T0qK3K3tciHxX_q4QtqNX3CP7JQiA/exec';
-
-
-function captureLocation() {
-
-  const status = document.getElementById('status');
-  const captureButton = document.getElementById('captureButton');
-
-  status.innerHTML = '📍 Getting your current location...';
-
-  captureButton.disabled = true;
-
-  if (!navigator.geolocation) {
-
-    status.innerHTML =
-      '❌ Location is not supported on this device.';
-
-    captureButton.disabled = false;
-    return;
-  }
-
-
-  navigator.geolocation.getCurrentPosition(
-
-    function(position) {
-
-      const latitude = position.coords.latitude;
-      const longitude = position.coords.longitude;
-      const accuracy = position.coords.accuracy;
-
-      const activity =
-        new URLSearchParams(window.location.search)
-        .get('activity') || 'Unknown';
-
-      const gpsTimestamp = new Date().toISOString();
-
-
-      status.innerHTML = '⏳ Saving location...';
-
-
-      const params = new URLSearchParams();
-
-      params.append('activity', activity);
-      params.append('latitude', latitude);
-      params.append('longitude', longitude);
-      params.append('accuracy', accuracy);
-      params.append('gpsTimestamp', gpsTimestamp);
-
-
-      /*
-       * Use an invisible image request.
-       * This avoids cross-origin/CORS problems.
-       */
-
-      const request = new Image();
-
-      request.onload = function() {
-        locationSaved();
-      };
-
-      request.onerror = function() {
-        /*
-         * The Apps Script receiver may still have
-         * successfully recorded the request.
-         */
-        locationSaved();
-      };
-
-      request.src =
-        RECEIVER_URL +
-        '?' +
-        params.toString() +
-        '&cache=' +
-        Date.now();
-    },
-
-
-    function(error) {
-
-      let message =
-        'Unable to get your location.';
-
-      if (error.code === 1) {
-
-        message =
-          'Location permission was denied. Please allow location access.';
-
-      } else if (error.code === 2) {
-
-        message =
-          'Location is currently unavailable.';
-
-      } else if (error.code === 3) {
-
-        message =
-          'Location request timed out. Please try again.';
-
-      }
-
-      status.innerHTML = '❌ ' + message;
-
-      captureButton.disabled = false;
-    },
-
-
-    {
-      enableHighAccuracy: true,
-      timeout: 20000,
-      maximumAge: 0
-    }
-
-  );
-}
-
-
-function locationSaved() {
-
-  const status = document.getElementById('status');
-  const captureButton = document.getElementById('captureButton');
-  const backButton = document.getElementById('backButton');
-
-  status.innerHTML =
-    '✅ Location recorded successfully.' +
-    '<br><br>' +
-    'Return to the CAB Form tab.';
-
-  captureButton.style.display = 'none';
-  backButton.style.display = 'block';
-}
-
-
-function goBackToForm() {
-
-  window.history.back();
-
-}
-
-</script>
-
-</body>
-</html>
+const KEY='cab_ops_v2';let db=JSON.parse(localStorage.getItem(KEY)||'null')||{user:null,vehicle:{id:'AURA-01',name:'Hyundai Aura',reg:'GJ01NT0088',fuel:'CNG',odo:0,services:[]},session:null,trips:[],fuel:[],expenses:[],exceptions:[]};
+function save(){localStorage.setItem(KEY,JSON.stringify(db));render()}function toast(t){let e=document.getElementById('toast');e.textContent=t;e.classList.remove('hidden');setTimeout(()=>e.classList.add('hidden'),2200)}function login(){let email=document.getElementById('loginEmail').value.trim();if(!email)return toast('Enter driver email');db.user={id:'DRIVER-01',email};save();document.getElementById('login').classList.add('hidden');document.getElementById('main').classList.remove('hidden');render()}function logout(){db.user=null;save();location.reload()}
+function show(id){['home','trips','finance','vehicle'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));render()}
+function modal(title,body){document.getElementById('modal').innerHTML=`<div style="position:fixed;inset:0;background:#0008;z-index:15;padding:20px;overflow:auto"><div class="card" style="max-width:500px;margin:40px auto"><h2>${title}</h2>${body}<button class="btn secondary" onclick="closeModal()">Cancel</button></div></div>`;document.getElementById('modal').classList.remove('hidden')}function closeModal(){document.getElementById('modal').classList.add('hidden')}
+function gps(cb){if(!navigator.geolocation)return cb(null);navigator.geolocation.getCurrentPosition(p=>cb({lat:p.coords.latitude,lng:p.coords.longitude,accuracy:p.coords.accuracy,time:new Date().toISOString()}),()=>cb(null),{enableHighAccuracy:true,timeout:20000,maximumAge:0})}
+function cameraInput(id){return `<div class="field"><label>Odometer / proof photo</label><input id="${id}" type="file" accept="image/*" capture="environment"></div>`}
+function startDay(){if(db.session?.status==='OPEN')return toast('Session already open');modal('🌅 Start Day',`<div class="field"><label>Start odometer</label><input id="sOdo" type="number" min="0"></div>${cameraInput('sPhoto')}<button class="btn success" onclick="submitStart()">Start Day + Capture GPS</button>`)}
+function submitStart(){let odo=Number(document.getElementById('sOdo').value);if(!odo)return toast('Enter odometer');gps(g=>{db.session={id:'SES-'+Date.now(),driverId:db.user.id,vehicleId:db.vehicle.id,startAt:new Date().toISOString(),startOdo:odo,startGps:g,status:'OPEN',closeAt:null,closeOdo:null,closeGps:null};db.vehicle.odo=odo;save();closeModal();toast('✓ Day started')})}
+function closeDay(){if(!db.session||db.session.status!=='OPEN')return toast('No open session');modal('🌙 Close Day',`<div class="field"><label>Close odometer</label><input id="cOdo" type="number" min="0" value="${db.vehicle.odo||''}"></div>${cameraInput('cPhoto')}<div class="field"><label>Reported trips</label><input id="rTrips" type="number" min="0" value="${completedTrips()}"></div><div class="field"><label>Reported income</label><input id="rIncome" type="number" min="0" value="${revenue()}"></div><button class="btn success" onclick="submitClose()">Close Session + Capture GPS</button>`)}
+function submitClose(){let odo=Number(document.getElementById('cOdo').value);if(!odo)return toast('Enter odometer');if(odo<db.session.startOdo)return toast('Close odometer cannot be lower');gps(g=>{db.session.closeAt=new Date().toISOString();db.session.closeOdo=odo;db.session.closeGps=g;db.session.status='CLOSED';db.vehicle.odo=odo;save();closeModal();toast('✓ Session closed & reconciled')})}
+function addTrip(){if(!db.session||db.session.status!=='OPEN')return toast('Start day first');modal('🚕 Add Trip',`<div class="field"><label>Platform</label><select id="tPlatform"><option>Uber</option><option>Ola</option><option>Rapido</option><option>Other</option></select></div><div class="field"><label>Pickup</label><input id="tPick"></div><div class="field"><label>Drop</label><input id="tDrop"></div><div class="grid"><div class="field"><label>Start odo</label><input id="tStart" type="number" value="${db.vehicle.odo}"></div><div class="field"><label>End odo</label><input id="tEnd" type="number"></div></div><div class="grid"><div class="field"><label>Gross fare ₹</label><input id="tFare" type="number"></div><div class="field"><label>Trip expense ₹</label><input id="tCharge" type="number" value="0"></div></div><div class="field"><label>Payment</label><select id="tPay"><option>Cash</option><option>UPI</option><option>Aggregator</option><option>Other</option></select></div><div class="field"><label>Status</label><select id="tStatus"><option>Completed</option><option>Cancelled by Customer</option><option>Cancelled by Driver</option><option>Customer No-Show</option></select></div><button class="btn primary" onclick="submitTrip()">Save Trip</button>`)}
+function submitTrip(){let s=Number(document.getElementById('tStart').value),e=Number(document.getElementById('tEnd').value),fare=Number(document.getElementById('tFare').value||0),charge=Number(document.getElementById('tCharge').value||0);if(e<s)return toast('End odometer must be >= start');let status=document.getElementById('tStatus').value;db.trips.push({id:crypto.randomUUID?crypto.randomUUID():'TRP-'+Date.now(),sessionId:db.session.id,at:new Date().toISOString(),platform:document.getElementById('tPlatform').value,pickup:document.getElementById('tPick').value,drop:document.getElementById('tDrop').value,startOdo:s,endOdo:e,km:e-s,grossFare:fare,tripExpense:charge,payment:document.getElementById('tPay').value,status});db.vehicle.odo=e;save();closeModal();toast('✓ Trip saved')}
+function addFuel(){if(!db.session||db.session.status!=='OPEN')return toast('Start day first');modal('⛽ Fuel',`<div class="grid"><div class="field"><label>Odometer</label><input id="fOdo" type="number" value="${db.vehicle.odo}"></div><div class="field"><label>Quantity</label><input id="fQty" type="number" step="0.01"></div></div><div class="grid"><div class="field"><label>Rate</label><input id="fRate" type="number" step="0.01"></div><div class="field"><label>Amount ₹</label><input id="fAmt" type="number" step="0.01"></div></div><div class="field"><label>Fuel type</label><select id="fType"><option>CNG</option><option>Petrol</option><option>Diesel</option><option>EV Charging</option></select></div>${cameraInput('fPhoto')}<button class="btn primary" onclick="submitFuel()">Save Fuel</button>`)}
+function submitFuel(){let odo=Number(document.getElementById('fOdo').value),qty=Number(document.getElementById('fQty').value),rate=Number(document.getElementById('fRate').value),amt=Number(document.getElementById('fAmt').value||qty*rate);if(odo<db.vehicle.odo)return toast('Odometer cannot go backwards');db.fuel.push({id:crypto.randomUUID?crypto.randomUUID():'F-'+Date.now(),sessionId:db.session.id,at:new Date().toISOString(),type:document.getElementById('fType').value,odo,qty,rate,amount:amt});db.vehicle.odo=odo;save();closeModal();toast('✓ Fuel saved')}
+function addExpense(){if(!db.session||db.session.status!=='OPEN')return toast('Start day first');modal('💰 Expense',`<div class="field"><label>Category</label><select id="eCat"><option>Toll</option><option>Parking</option><option>Car Wash</option><option>Repair</option><option>Maintenance</option><option>Fine</option><option>Other</option></select></div><div class="field"><label>Amount ₹</label><input id="eAmt" type="number"></div>${cameraInput('ePhoto')}<div class="field"><label>Notes</label><textarea id="eNote"></textarea></div><button class="btn primary" onclick="submitExpense()">Save Expense</button>`)}
+function submitExpense(){let a=Number(document.getElementById('eAmt').value);if(a<=0)return toast('Enter amount');db.expenses.push({id:crypto.randomUUID?crypto.randomUUID():'E-'+Date.now(),sessionId:db.session.id,at:new Date().toISOString(),category:document.getElementById('eCat').value,amount:a,note:document.getElementById('eNote').value});save();closeModal();toast('✓ Expense saved')}
+function completedTrips(){return db.trips.filter(t=>t.sessionId===db.session?.id&&t.status==='Completed').length}function revenue(){return db.trips.filter(t=>t.sessionId===db.session?.id).reduce((a,t)=>a+t.grossFare,0)}function sessionKm(){return db.session?.closeOdo!=null?db.session.closeOdo-db.session.startOdo:db.vehicle.odo-(db.session?.startOdo||db.vehicle.odo)}function render(){if(!db.user)return;document.getElementById('userLine').textContent=`${db.user.email} • ${db.vehicle.name} ${db.vehicle.reg}`;let open=db.session?.status==='OPEN';document.getElementById('home').innerHTML=`<div class="card hero"><div class="muted" style="color:#cbd5e1">CURRENT SESSION</div><h2>${open?'🟢 OPEN':'⚪ NOT STARTED'}</h2><p>${open?'Started '+new Date(db.session.startAt).toLocaleString():'Ready for Day Start'}</p>${open?`<div class="grid"><div><small>Running KM</small><h2>${sessionKm()}</h2></div><div><small>Trips</small><h2>${completedTrips()}</h2></div><div><small>Revenue</small><h2>₹${revenue()}</h2></div><div><small>Odometer</small><h2>${db.vehicle.odo}</h2></div></div>`:''}</div>${open?`<button class="btn primary" onclick="addTrip()">🚕 ADD TRIP</button><button class="btn secondary" onclick="addFuel()">⛽ FUEL</button><button class="btn secondary" onclick="addExpense()">💰 EXPENSE</button><button class="btn danger" onclick="closeDay()">🌙 CLOSE DAY</button>`:`<button class="btn success" onclick="startDay()">🌅 START DAY</button>`}<div class="card"><h3>Key Metrics</h3><div class="grid"><div class="metric">Trips<b>${db.trips.length}</b></div><div class="metric">Revenue<b>₹${db.trips.reduce((a,t)=>a+t.grossFare,0)}</b></div><div class="metric">Fuel<b>₹${db.fuel.reduce((a,x)=>a+x.amount,0)}</b></div><div class="metric">Expenses<b>₹${db.expenses.reduce((a,x)=>a+x.amount,0)}</b></div></div></div><div class="card"><h3>Account</h3><button class="btn secondary" onclick="logout()">Log out</button></div>`;
+document.getElementById('trips').innerHTML=`<div class="card"><h2>Trips</h2><button class="btn primary" onclick="addTrip()">+ Add Trip</button></div>${db.trips.slice().reverse().map(t=>`<div class="card"><b>${t.platform}</b> <span class="pill">${t.status}</span><p>${t.pickup||'—'} → ${t.drop||'—'}</p><div class="grid"><div>KM <b>${t.km}</b></div><div>Gross <b>₹${t.grossFare}</b></div></div><p class="muted">Trip expense ₹${t.tripExpense||0}</p></div>`).join('')||'<div class="card muted">No trips yet.</div>'}`;
+document.getElementById('finance').innerHTML=`<div class="card"><h2>Fuel & Expenses</h2><button class="btn primary" onclick="addFuel()">+ Fuel</button><button class="btn secondary" onclick="addExpense()">+ Expense</button></div><div class="card"><h3>Fuel</h3>${db.fuel.slice().reverse().map(x=>`<p>${x.type} • ${x.qty} @ ₹${x.rate} = <b>₹${x.amount}</b><br><span class="muted">Odo ${x.odo}</span></p>`).join('')||'<span class="muted">No fuel records.</span>'}</div><div class="card"><h3>Expenses</h3>${db.expenses.slice().reverse().map(x=>`<p>${x.category} — <b>₹${x.amount}</b><br><span class="muted">${x.note||''}</span></p>`).join('')||'<span class="muted">No expenses.</span>'}</div>`;
+document.getElementById('vehicle').innerHTML=`<div class="card hero"><h2>🚗 ${db.vehicle.name}</h2><p>${db.vehicle.reg} • ${db.vehicle.fuel}</p><div class="metric">Current Odometer<b>${db.vehicle.odo}</b></div></div><div class="card"><h3>Service</h3><button class="btn primary" onclick="addService()">+ Add Service</button>${db.vehicle.services.map(s=>`<p><b>${s.type}</b> — ₹${s.amount}<br><span class="muted">${s.date} • Odo ${s.odo}</span></p>`).join('')||'<p class="muted">No service records.</p>'}</div>`}
+function addService(){modal('🔧 Vehicle Service',`<div class="field"><label>Service type</label><input id="svType" placeholder="Periodic Service"></div><div class="grid"><div class="field"><label>Date</label><input id="svDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div class="field"><label>Odometer</label><input id="svOdo" type="number" value="${db.vehicle.odo}"></div></div><div class="field"><label>Amount ₹</label><input id="svAmt" type="number"></div><div class="field"><label>Next service odometer</label><input id="svNext" type="number"></div><button class="btn primary" onclick="submitService()">Save Service</button>`)}function submitService(){db.vehicle.services.push({type:document.getElementById('svType').value||'Service',date:document.getElementById('svDate').value,odo:Number(document.getElementById('svOdo').value),amount:Number(document.getElementById('svAmt').value||0),nextOdo:Number(document.getElementById('svNext').value||0)});save();closeModal();toast('✓ Service saved')}
+if(db.user){document.getElementById('login').classList.add('hidden');document.getElementById('main').classList.remove('hidden');render()}
+</script></body></html>
